@@ -1,0 +1,23 @@
+Explanatory Notes: Business Logic Class Diagram
+1. Le choix de l'Héritage via BaseModel
+Conformément aux exigences de la tâche, chaque objet doit être identifié de manière unique et posséder des données d'audit.
+
+BaseModel : Sert de classe mère à toutes les autres entités (User, Place, etc.).
+
+Attributs partagés : Elle centralise id (UUID), created_at et updated_at, garantissant ainsi que chaque entité respecte les règles métier de traçabilité sans répéter le code (principe DRY).
+
+2. Détails des Entités et Business Rules
+Chaque classe a été conçue pour répondre aux opérations primaires de l'application HBnB Evolution :
+
+User Management : La classe User inclut un attribut booléen is_admin pour distinguer les administrateurs des utilisateurs réguliers.
+
+Place Management : L'entité Place contient les champs géographiques (latitude, longitude) et financiers (price) requis. Elle est liée à un User (propriétaire).
+
+Review Management : La classe Review lie obligatoirement un utilisateur à un lieu spécifique, incluant une note et un commentaire.
+
+Amenity Management : Gérée via l'entité Amenity pour lister les services disponibles dans chaque lieu.
+
+3. Logique des Relations
+One-to-Many (1:N) : Un utilisateur peut posséder plusieurs lieux ou rédiger plusieurs avis, mais un avis n'appartient qu'à un seul auteur.
+
+Many-to-Many (M:N) : Une relation est établie entre Place et Amenity. Un lieu peut offrir plusieurs équipements, et un même équipement (ex: "WiFi") peut être présent dans plusieurs lieux.
