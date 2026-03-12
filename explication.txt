@@ -1,0 +1,71 @@
+79/79 tests passent. Voici le récapitulatif complet des corrections :
+
+Récapitulatif des 6 bugs corrigés
+Bug 1 — Place : La validation GPS était court-circuitée
+Fichier : app/models/place.py
+
+# AVANT (buggé) — assignation directe à la variable privée, ignore les setters
+self._latitude = latitude
+self._longitude = longitude
+
+# APRÈS (corrigé) — passe par les property setters qui valident [-90,90] / [-180,180]
+self.latitude = latitude
+self.longitude = longitude
+
+Explication : En Python, self._latitude = x écrit directement dans l'attribut privé sans passer par le @latitude.setter. Le setter avec sa validation n'était donc jamais appelé à la création.
+
+Bug 2 — Place : Prix négatif ou nul accepté
+Fichier : app/models/place.py
+
+# AJOUTÉ avant self.price = price
+if not isinstance(price, (int, float)) or price <= 0:
+    raise ValueError("Price must be a positive number")
+
+Explication : Il n'y avait aucune règle métier sur le prix. Un logement gratuit ou à prix négatif pouvait être créé.
+
+Bug 3 — Amenity : Nom vide accepté
+Fichier : app/models/amenity.py
+
+# AJOUTÉ avant self.name = name
+if not name or not isinstance(name, str) or not name.strip():
+    raise ValueError("Amenity name is required and cannot be empty")
+
+Explication : Le modèle stockait le nom sans aucune vérification. {"name": ""} créait une amenity avec un nom vide.
+
+Bug 4 — Review : Texte vide accepté
+Fichier : app/models/review.py
+
+# AJOUTÉ avant self.text = text
+if not text or not isinstance(text, str) or not text.strip():
+    raise ValueError("Review text is required and cannot be empty")
+
+Explication : Le modèle validait uniquement le rating (1-5), mais jamais le texte de l'avis.
+
+Bug 5 — User : Email dupliqué non bloqué
+Fichier : app/services/facade.py
+
+def create_user(self, user_data: dict):
+    # AJOUTÉ
+    if self.get_user_by_email(user_data.get('email')):
+        raise ValueError("Email already registered")
+    user = User(**user_data)
+    ...
+
+Explication : La méthode get_user_by_email() existait déjà mais n'était jamais utilisée lors de la création. Deux comptes avec le même email pouvaient donc coexister.
+
+Bug 6 — Isolation des tests : le singleton facade était partagé
+Fichiers : app/services/facade.py + app/__init__.py
+
+# Dans facade.py — nouvelle méthode ajoutée
+def reset(self):
+    self.user_repo = InMemoryRepository()
+    self.place_repo = InMemoryRepository()
+    ...
+
+# Dans __init__.py — appelée au début de create_app()
+def create_app():
+    from app.services import facade
+    facade.reset()   # ← chaque test repart sur une base vide
+    ...
+
+Explication : La facade est un singleton créé au chargement du module. Chaque test appelle create_app() en pensant avoir un environnement propre, mais tous partagent les mêmes repositories en mémoire. Les données créées dans un test "fuitaient" dans le suivant. Désormais, create_app() vide les repositories à chaque appel.
