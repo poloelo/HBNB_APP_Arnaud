@@ -17,6 +17,8 @@ class HBnBFacade:
      # ── User ──────────────────────────────────────────────────────────────────
 
     def create_user(self, user_data: dict):
+        if self.get_user_by_email(user_data.get('email')):
+            raise ValueError("Email already registered")
         user = User(**user_data)
         self.user_repo.add(user)
         return user
@@ -160,6 +162,14 @@ class HBnBFacade:
         self.booking_repo.delete(booking_id)
 
     # ── Internal helpers ──────────────────────────────────────────────────────
+
+    def reset(self):
+        """Reset all repositories (used between tests to ensure isolation)."""
+        self.user_repo = InMemoryRepository()
+        self.place_repo = InMemoryRepository()
+        self.amenity_repo = InMemoryRepository()
+        self.review_repo = InMemoryRepository()
+        self.booking_repo = InMemoryRepository()
 
     def _check_overlap(self, new_booking, exclude_id: str = None):
         """Raise ValueError if new_booking overlaps any active booking for the same place."""

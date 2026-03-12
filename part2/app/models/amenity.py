@@ -14,6 +14,8 @@ class Amenity(BaseModel):
                 description (str): Optional description of the amenity
         """
         super().__init__() # Call __init__ of BaseModel
+        if not name or not isinstance(name, str) or not name.strip():
+            raise ValueError("Amenity name is required and cannot be empty")
         self.name = name
         self.description = description
 

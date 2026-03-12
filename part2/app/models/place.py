@@ -21,9 +21,11 @@ class Place(BaseModel):
         self.name = name
         self.title = title
         self.description = description
+        if not isinstance(price, (int, float)) or price <= 0:
+            raise ValueError("Price must be a positive number")
         self.price = price
-        self._latitude = latitude
-        self._longitude = longitude
+        self.latitude = latitude
+        self.longitude = longitude
         self.owner_id = owner_id
         self.amenities = []  # List of amenity IDs (UUID strings)
 
