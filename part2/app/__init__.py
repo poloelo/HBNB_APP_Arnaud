@@ -2,6 +2,9 @@ from flask import Flask
 from flask_restx import Api
 
 def create_app():
+    from app.services import facade
+    facade.reset()
+
     app = Flask(__name__)
     api = Api(
         app,

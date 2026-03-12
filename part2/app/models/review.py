@@ -15,6 +15,8 @@ class Review(BaseModel):
                 place_id (str): UUID of the place being reviewed
         """
         super().__init__() # Call __init__ of BaseModel
+        if not text or not isinstance(text, str) or not text.strip():
+            raise ValueError("Review text is required and cannot be empty")
         self.text = text
         self.rating = rating
         self.user_id = user_id
